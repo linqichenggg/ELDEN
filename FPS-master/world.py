@@ -54,7 +54,7 @@ class World(mesa.Model):
     '''
     The world where Citizens exist
     '''
-    def __init__(self, args, initial_healthy=2, initial_infected=1, contact_rate=1):
+    def __init__(self, args, initial_healthy=18, initial_infected=2, contact_rate=2):
         
         ########################################
         #     Intialization of the world       #
@@ -71,7 +71,18 @@ class World(mesa.Model):
         self.step_count = args.no_days
         self.offset = 0 #Offset for checkpoint load
         self.name = args.name
-        self.topic="The central bank will implement new regulations on large deposits, and all large deposits must present specific proof materials."
+        self.topic = "每天喝一杯白酒可以预防糖尿病和高血压，对老年人的心脑血管健康有益"
+        self.health_conditions = {
+            'diabetes': 0.35,  # 糖尿病患病率
+            'hypertension': 0.6,  # 高血压患病率
+            'heart_disease': 0.25  # 心脏病患病率
+        }
+        
+        # 添加老年人社交场景
+        self.community_activities = [
+            "广场舞", "老年大学", "社区棋牌室", 
+            "晨练小组", "老年活动中心", "社区健康讲座"
+        ]
 
         #Important infection variables
         self.total_contact_rates = 0
@@ -123,7 +134,7 @@ class World(mesa.Model):
 
             #create instances of the Citizen class
             citizen = Citizen(model=self,
-                              unique_id=agent_id, name=names[i], age=random.randrange(18,65),
+                              unique_id=agent_id, name=names[i], age=random.randrange(60,90),
                               traits=traits[i], opinion=opinion,
                               qualification=qualifications[i],
                               health_condition=health_condition,
@@ -146,6 +157,24 @@ class World(mesa.Model):
             potential_interactions=potential_interactions[:self.max_potential_interactions]  
             for other_agent in potential_interactions:
                 agent.agent_interaction.append(other_agent)    
+
+        # 添加老年人特色社交
+        for agent in self.schedule.agents:
+            # 社区活动参与（40%概率）
+            if random.random() < 0.4:
+                activity = random.choice(self.community_activities)
+                # 找到3-5个参与相同活动的代理人
+                participants = [
+                    a for a in self.schedule.agents 
+                    if a != agent and random.random() < 0.3
+                ][:random.randint(3,5)]
+                agent.agent_interaction.extend(participants)
+            
+            # 家庭互动（70%概率与家人联系）
+            if random.random() < 0.7:
+                family = [a for a in self.schedule.agents 
+                         if a != agent and random.random() < 0.2][:2]
+                agent.agent_interaction.extend(family)
 
     def step(self):
         '''

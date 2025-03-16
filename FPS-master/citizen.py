@@ -8,6 +8,7 @@ logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
 import json
 from prompt import *
+import random
 
 def get_summary_long(long_memory, short_memory):
     user_msg = long_memory_prompt.format(long_memory=long_memory, short_memory=short_memory)
@@ -73,6 +74,18 @@ class Citizen(mesa.Agent):
         self.beliefs.append(self.initial_belief)
         self.reasonings.append(self.initial_reasoning)
 
+        # 添加老年人属性
+        self.health_status = {
+            'diabetes': random.random() < model.health_conditions['diabetes'],
+            'hypertension': random.random() < model.health_conditions['hypertension'],
+            'heart_disease': random.random() < model.health_conditions['heart_disease']
+        }
+        self.health_literacy = random.choice(["低", "中", "高"])  # 健康素养水平
+        self.media_usage = {  # 媒体使用习惯
+            'traditional': random.choice(["每天看电视", "经常听广播", "读报纸"]),
+            'digital': random.choice(["会用微信", "不会用智能手机", "子女帮忙操作"])
+        }
+
     ########################################
     #          Initial Opinion             #
     ########################################
@@ -111,12 +124,29 @@ class Citizen(mesa.Agent):
 
         long_mem = get_summary_long(self.long_opinion_memory, opinion_short_summary)
 
-        user_msg = update_opinion_prompt.format(agent_persona=self.traits,
-                                                agent_qualification=self.qualification,
-                                                agent_name=self.name,
-                                                long_mem=long_mem,
-                                                topic=self.topic,
-                                                opinion=self.opinion)
+        # 生成健康状态描述
+        health_desc = []
+        if self.health_status['diabetes']:
+            health_desc.append("糖尿病")
+        if self.health_status['hypertension']:
+            health_desc.append("高血压")
+        if self.health_status['heart_disease']:
+            health_desc.append("心脏病")
+        health_status = "、".join(health_desc) if health_desc else "无慢性病"
+
+        # 构建提示信息
+        user_msg = update_opinion_prompt.format(
+            agent_name=self.name,
+            agent_age=self.age,
+            agent_health=health_status,
+            agent_persona=self.traits,
+            agent_qualification=self.qualification,
+            health_literacy=self.health_literacy,
+            media_usage=self.media_usage,
+            topic=self.topic,
+            opinion=self.opinion,
+            long_mem=long_mem
+        )
         
         self.opinion, self.belief, self.reasoning = self.response_and_belief(user_msg)
         self.opinions.append(self.opinion)

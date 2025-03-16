@@ -1,79 +1,79 @@
 update_opinion_prompt = (
-    """ Based on the following inputs, update your opinion on the {topic}:
-1. Previous personal Opinion: {opinion}
-2. Long Memory Summary of Others' Opinions: {long_mem}
-3. Name: {agent_name}
-4. Trait: {agent_persona}
-5. Education level: {agent_qualification}
+    """作为一位{agent_age}岁的老年人，请根据以下信息更新您对健康话题的看法：
+    
+【个人背景】
+姓名：{agent_name}
+健康状况：{agent_health}
+教育程度：{agent_qualification}
+健康素养：{health_literacy}
+媒体使用：{media_usage}
+性格特点：{agent_persona}
 
-Keep in mind that you are simulating a real person in this role-play. As humans often exhibit confirmation bias, you should demonstrate a similar tendency. This means you are more inclined to believe information aligning with your pre-existing beliefs, and more skeptical of information that contradicts them.
-Your responses will be formatted in JSON. Please structure them as follows:
+【历史观点】{opinion}
+【长期记忆】{long_mem}
 
-tweet: Provide the content of a tweet you might write reflecting your opinion.
-belief: Indicate your belief about the information, represented by '0' for disbelief and '1' for belief.
-reasoning: Explain the reasoning behind your tweet and your stated belief.
+请模拟真实老年人的思维特点：
+1. 更相信传统养生方法
+2. 关注简单易行的健康建议
+3. 容易受亲友经验影响
+4. 对复杂医学知识理解有限
 
-For example: {{\"tweet\": \"Trump was shot dead at the White House!\", \"belief\": 0 , \"reasoning\": \"Trump is very likely to be killed by an assassin, so I believe this news\"}}
-"""
+请用JSON格式返回：
+{{
+    "tweet": "您会分享的健康建议（50字内，口语化）",
+    "belief": 是否相信（0/1）,
+    "reasoning": "结合年龄、健康状况和个人经历的解释（示例：'我有高血压，喝了酒感觉舒服'）"
+}}"""
 )
 
 reflecting_prompt = (
-    """The dicussed topic is {topic}.
-    Here are the opinions you have heard so far: 
-    {opinions} 
-    Summarize the opinions you have heard in a few sentences, including whether or not they believe in the news.
+    """关于健康话题：{topic}
+    
+收集到的社区意见：
+{opinions}
+
+请用老年人易懂的方式总结这些观点，注意：
+- 突出主要支持/反对理由
+- 比较不同健康状况人群的看法差异
+- 分析信息来源的可信度（如：电视专家 vs 邻居经验）
 """
 )
 
 long_memory_prompt = (
-    """Recap of Previous Long-Term Memory: {long_memory}
-    Today's Short-Term Summary: {short_memory}
-    Please update long-term memory by integrating today's summary with the existing long-term memory, ensuring to maintain continuity and add any new insights or important information from today's interactions. Only return long-term memory.
-"""
+    """【长期记忆回顾】{long_memory}
+【今日新信息】{short_memory}
+
+请用老年人记忆特点更新长期记忆：
+1. 保留重要健康建议
+2. 记住反复出现的观点
+3. 关联个人健康经历
+4. 使用简单易懂的表述
+
+只需返回更新后的长期记忆内容"""
 )
 
-topic_sentence_infeted =  [
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the city has implemented supportive housing policies.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it aims to provide housing solutions for low-income families.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the government is subsidizing housing to promote social welfare.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because this initiative is part of a broader affordable housing program.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it's a measure to address the urban housing challenge.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the city is encouraging economic diversity in its neighborhoods.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it helps in balancing the real estate market.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it's a step towards more inclusive urban development.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it provides stability for lower-income residents.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the city recognizes the need for affordable living spaces.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it's an effort to prevent gentrification.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it ensures diversity in housing options.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it's an initiative to support the economically disadvantaged.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it's part of a sustainable urban planning strategy.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it encourages a more balanced urban population.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it helps to alleviate housing stress for many.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it reflects the city's commitment to social equity.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it is a proactive approach to urban housing issues.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it aims to improve the quality of life for its residents.",
-    "I believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it's a testament to the city's progressive housing policies."
+topic_sentence_infeted = [
+    "我相信每天喝点白酒能养生，我们老一辈都这么过来的",
+    "邻居王大爷喝了十年药酒，血压一直很稳定",
+    "电视专家说适量饮酒有益心血管健康",
+    "中医讲酒能活血化瘀，对老年人好",
+    "老伴走了后，晚上喝一杯睡得香",
+    "村里长寿老人都有每天喝酒的习惯",
+    "药酒里泡了人参枸杞，肯定有好处",
+    "儿女不让喝，但我自己感觉有效",
+    "退休医生老李也每天喝一小杯",
+    "冬天喝点酒身子暖和，关节不疼"
 ]
 
 topic_sentence_susceptible = [
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the cost of living in the city is generally high.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because such low pricing might not cover basic housing standards.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because there might be hidden costs involved.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the real estate market usually has higher rates.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because there could be stringent eligibility criteria.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it seems too good to be true in the current economy.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because there may be long waiting lists for such housing.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the quality of such housing might be subpar.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it might be located in less desirable areas.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because government subsidies often have strict limitations.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the information could be outdated or incorrect.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because such initiatives often face bureaucratic delays.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the application process might be overly complicated.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because there could be a lack of available units.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because such schemes often prioritize certain demographics.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the maintenance costs might be high.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the location and size of the housing might not be ideal.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because there might be better housing options at a similar price.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because the program might have limited funding.",
-    "I don't believe that in Liuzhou, you can apply for affordable rental housing with just 30,000 yuan because it could be a temporary solution rather than a long-term one."
+    "医生说酒精伤肝，不能再喝了",
+    "上次喝酒后头晕，血压都高了",
+    "微信文章说喝酒养生是谣言",
+    "子女买了保健品，比喝酒安全",
+    "社区健康讲座强调要戒酒",
+    "同楼张阿姨喝酒中风了",
+    "降压药说明书明确要求禁酒",
+    "医院检查显示肝功能异常",
+    "健康手册说酒精是一级致癌物",
+    "老伴因为喝酒摔骨折过"
 ]

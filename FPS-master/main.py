@@ -13,7 +13,7 @@ if __name__ == "__main__":
                         help="Number of initial healthy people in the world.")    
     parser.add_argument("--no_init_infect", default= 2, type=int,
                         help="Number of initial infected people in the world.")   
-    parser.add_argument("--no_days", default=5, type=int,  #15 -> 5
+    parser.add_argument("--no_days", default=3, type=int,  #15 -> 5
                         help="Total number of days the world should run.")     
     parser.add_argument("--no_of_runs", default = 1, type = int, help = "Total number of times you want to run this code.")
     parser.add_argument("--offset", default=0,type=int, help="offset is equal to number of days if you need to load a checkpoint")
