@@ -9,11 +9,11 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", default = "GABM", help = "Name of the run to save outputs.")
     parser.add_argument("--contact_rate", default=3, type=int, help="Contact Rate")
-    parser.add_argument("--no_init_healthy", default=8, type=int,  #28 -> 8
+    parser.add_argument("--no_init_healthy", default=5, type=int,  #28 -> 5
                         help="Number of initial healthy people in the world.")    
-    parser.add_argument("--no_init_infect", default= 2, type=int,
+    parser.add_argument("--no_init_infect", default=5, type=int, #2 -> 5
                         help="Number of initial infected people in the world.")   
-    parser.add_argument("--no_days", default=3, type=int,  #15 -> 5
+    parser.add_argument("--no_days", default=3, type=int,  #15 -> 3
                         help="Total number of days the world should run.")     
     parser.add_argument("--no_of_runs", default = 1, type = int, help = "Total number of times you want to run this code.")
     parser.add_argument("--offset", default=0,type=int, help="offset is equal to number of days if you need to load a checkpoint")
@@ -39,7 +39,7 @@ if __name__ == "__main__":
             if os.path.exists(checkpoint_file):
                 model = World.load_checkpoint(checkpoint_file)
             else:
-                print(f"Warning! Checkpoint not found. Initializing new world for run {args.load_from_checkpoint+1}. This is normal if you want to continue from run {args.load_from_checkpoint+1} from scratch")
+                print(f"Warning! Checkpoint not found. Initializing new world for run {args.load_from_run+1}. This is normal if you want to continue from run {args.load_from_run+1} from scratch")
                 model = World(args, initial_healthy=args.no_init_healthy, initial_infected=args.no_init_infect,contact_rate=args.contact_rate)
         else:
             model = World(args, initial_healthy=args.no_init_healthy, initial_infected=args.no_init_infect,contact_rate=args.contact_rate)

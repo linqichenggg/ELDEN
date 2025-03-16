@@ -74,14 +74,8 @@ class Citizen(mesa.Agent):
         self.beliefs.append(self.initial_belief)
         self.reasonings.append(self.initial_reasoning)
 
-        # 添加老年人属性
-        self.health_status = {
-            'diabetes': random.random() < model.health_conditions['diabetes'],
-            'hypertension': random.random() < model.health_conditions['hypertension'],
-            'heart_disease': random.random() < model.health_conditions['heart_disease']
-        }
-        self.health_literacy = random.choice(["低", "中", "高"])  # 健康素养水平
-        self.media_usage = {  # 媒体使用习惯
+        # 媒体使用习惯
+        self.media_usage = {
             'traditional': random.choice(["每天看电视", "经常听广播", "读报纸"]),
             'digital': random.choice(["会用微信", "不会用智能手机", "子女帮忙操作"])
         }
@@ -124,27 +118,15 @@ class Citizen(mesa.Agent):
 
         long_mem = get_summary_long(self.long_opinion_memory, opinion_short_summary)
 
-        # 生成健康状态描述
-        health_desc = []
-        if self.health_status['diabetes']:
-            health_desc.append("糖尿病")
-        if self.health_status['hypertension']:
-            health_desc.append("高血压")
-        if self.health_status['heart_disease']:
-            health_desc.append("心脏病")
-        health_status = "、".join(health_desc) if health_desc else "无慢性病"
-
         # 构建提示信息
         user_msg = update_opinion_prompt.format(
             agent_name=self.name,
             agent_age=self.age,
-            agent_health=health_status,
             agent_persona=self.traits,
             agent_qualification=self.qualification,
-            health_literacy=self.health_literacy,
             media_usage=self.media_usage,
             topic=self.topic,
-            opinion=self.opinion,
+            opinion="【重要】" + self.opinion,
             long_mem=long_mem
         )
         
@@ -152,15 +134,17 @@ class Citizen(mesa.Agent):
         self.opinions.append(self.opinion)
         self.beliefs.append(self.belief)
         self.reasonings.append(self.reasoning)
-        print(str(self.unique_id))
-        print(self.reasoning)
-        print(str(self.belief))
+        print(f"ID: {self.unique_id}")
+        print(f"Tweet: {self.opinion}")
+        print(f"Belief: {self.belief}")
+        print(f"Reasoning: {self.reasoning}")
+        print("-" * 50)
 
         self.long_opinion_memory = long_mem
         self.long_memory_full.append(self.long_opinion_memory)
         #Reset Agent Interaction list
         self.agent_interaction=[]
-        self.get_health()
+
     ########################################
     #               Infect                 #
     ########################################
@@ -175,17 +159,6 @@ class Citizen(mesa.Agent):
         reasoning = output['reasoning']
         belief = int(belief)
         return tweet, belief, reasoning
-
-
-
-    def get_health(self):
-        if self.health_condition=='Infected' and self.belief == 0:
-            self.health_condition='to_be_recover'
-        elif self.health_condition!='Infected' and self.belief == 1 :
-            self.health_condition='to_be_infected'
-        else:
-            pass
-
 
 
     ################################################################################

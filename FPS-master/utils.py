@@ -131,27 +131,30 @@ def generate_big5_traits(n: int):
 
 def update_day(agent):
     '''
-    Update day funtion to update day_sick
-    Used in World.step()
+    更新代理人的健康状态
+    根据belief值转换health_condition
     '''
-    # print("Agent ID: {} Day infected: {}".format(agent.unique_id,agent.day_infected))
-
-
-    #if person is healthy, no reason to update health status
-    if agent.health_condition=="Susceptible" or agent.health_condition=="Infected":
-        return
-
-    if agent.health_condition=="to_be_infected":
-        agent.health_condition="Infected"
-        agent.model.daily_new_infected_cases +=1 #every time new infection occurs in a day, counter is updated
-        agent.model.infected += 1 #Update amount infected at any given time
+    # 首先检查当前belief与health_condition是否匹配
+    # 如果不匹配，则标记为需要更新
+    if agent.health_condition == "Infected" and agent.belief == 0:
+        agent.health_condition = "to_be_recover"
+    elif agent.health_condition == "Susceptible" and agent.belief == 1:
+        agent.health_condition = "to_be_infected"
+    
+    # 然后处理标记为需要更新的状态
+    if agent.health_condition == "to_be_infected":
+        agent.health_condition = "Infected"
+        agent.model.daily_new_infected_cases += 1
+        agent.model.infected += 1
         agent.model.susceptible -= 1
-
-    if agent.health_condition=="to_be_recover":
-        agent.health_condition="Recovered"
-        agent.model.daily_new_susceptible_cases +=1 #every time new infection occurs in a day, counter is updated
-        agent.model.infected -= 1 #Update amount infected at any given time
+        print(f"Agent {agent.unique_id} became Infected (belief={agent.belief})")
+    
+    elif agent.health_condition == "to_be_recover":
+        agent.health_condition = "Susceptible"  # 改为Susceptible而不是Recovered
+        agent.model.daily_new_susceptible_cases += 1
+        agent.model.infected -= 1
         agent.model.susceptible += 1
+        print(f"Agent {agent.unique_id} became Susceptible (belief={agent.belief})")
 
 
 def factorize(n):
