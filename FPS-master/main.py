@@ -1,4 +1,3 @@
-import openai
 from world import World
 import argparse
 import pandas as pd
@@ -13,7 +12,7 @@ if __name__ == "__main__":
                         help="Number of initial healthy people in the world.")    
     parser.add_argument("--no_init_infect", default=5, type=int, #2 -> 5
                         help="Number of initial infected people in the world.")   
-    parser.add_argument("--no_days", default=3, type=int,  #15 -> 3
+    parser.add_argument("--no_days", default=2, type=int,  #15 -> 3
                         help="Total number of days the world should run.")     
     parser.add_argument("--no_of_runs", default = 1, type = int, help = "Total number of times you want to run this code.")
     parser.add_argument("--offset", default=0,type=int, help="offset is equal to number of days if you need to load a checkpoint")
@@ -38,23 +37,30 @@ if __name__ == "__main__":
             checkpoint_file = f"checkpoint/run-{args.load_from_run+1}/{args.name}-{args.offset}.pkl"
             if os.path.exists(checkpoint_file):
                 model = World.load_checkpoint(checkpoint_file)
+                # 加载后检查一致性
+                model.check_consistency()
             else:
                 print(f"Warning! Checkpoint not found. Initializing new world for run {args.load_from_run+1}. This is normal if you want to continue from run {args.load_from_run+1} from scratch")
                 model = World(args, initial_healthy=args.no_init_healthy, initial_infected=args.no_init_infect,contact_rate=args.contact_rate)
         else:
             model = World(args, initial_healthy=args.no_init_healthy, initial_infected=args.no_init_infect,contact_rate=args.contact_rate)
+            # 初始化后检查一致性
+            model.check_consistency()
 
         model.run_model(checkpoint_path, args.offset)
         data = model.datacollector.get_model_vars_dataframe() #collect data from the successful run of the model
 
-        df = pd.DataFrame(data)   
-        new_infections_newspaper=model.list_new_infected_cases[:-1]  
-        new_infections_newspaper[0]=model.list_new_infected_cases[0]+model.initial_infected  
-        new_infections_newspaper[1]=model.list_new_infected_cases[1]-model.initial_infected  
-        df['New Infections']=new_infections_newspaper
-        df['Cumulative Infections'] = df['New Infections'].cumsum()
-        df['Total Contact'] = model.track_contact_rate[:len(df)]
+        # 获取模型数据
+        model_data = data.copy()
         
+        # 如果数据行数超过预期，截取前面的行
+        expected_rows = args.no_days + 1  # 初始状态 + no_days
+        if len(model_data) > expected_rows:
+            print(f"WARNING: Model data has {len(model_data)} rows, expected {expected_rows}. Truncating.")
+            model_data = model_data.iloc[:expected_rows]
+
+        # 添加到DataFrame
+        df = model_data.copy()
 
         #Insert a step column function
         df.insert(0, 'Step',range(0,len(df)))  
@@ -66,13 +72,12 @@ if __name__ == "__main__":
         plt.figure(figsize=(10,6))
         plt.plot(df['Step'], df['Susceptible'], label="Susceptible")
         plt.plot(df['Step'], df['Infected'], label="Infected")
-        plt.plot(df['Step'] ,df['Recovered'], label="Recovered")
+        plt.plot(df['Step'], df['Recovered'], label="Recovered")
         plt.xlabel('Step')
         plt.ylabel('# of People')
-        plt.title('SIR')
+        plt.title('SIR Model')
         plt.legend()
         plt.savefig(output_path+f'/{args.name}-SIR.png', bbox_inches='tight')
-
 
         #save final checkpoint after successful run
         model.save_checkpoint(file_path = checkpoint_path + f"/{args.name}-completed.pkl")

@@ -1,23 +1,15 @@
 from names_dataset import NameDataset
 import numpy as np
 import random
-import openai
 import time
 import os
 import shutil
 from zhipuai import ZhipuAI
 import json
+import logging
 
 # 在文件顶部添加智谱AI客户端
 zhipu_client = ZhipuAI(api_key="2fbfc2acf9e54a09886d422966fa3448.lss3vj7BdP327Wdh")  # 替换为您的实际API密钥
-
-def probability_threshold(threshold):
-    '''
-    Used in self.infect_interaction()
-    '''
-    #Generates random number from 0 to 1
-    
-    return (np.random.rand()<threshold)
 
 def generate_qualifications(n: int):
     '''
@@ -133,28 +125,41 @@ def update_day(agent):
     '''
     更新代理人的健康状态
     根据belief值转换health_condition
+    
+    Parameters:
+    agent (Citizen): 要更新的代理人对象
     '''
-    # 首先检查当前belief与health_condition是否匹配
-    # 如果不匹配，则标记为需要更新
-    if agent.health_condition == "Infected" and agent.belief == 0:
-        agent.health_condition = "to_be_recover"
-    elif agent.health_condition == "Susceptible" and agent.belief == 1:
-        agent.health_condition = "to_be_infected"
+    logger = logging.getLogger(__name__)
     
-    # 然后处理标记为需要更新的状态
-    if agent.health_condition == "to_be_infected":
-        agent.health_condition = "Infected"
-        agent.model.daily_new_infected_cases += 1
-        agent.model.infected += 1
-        agent.model.susceptible -= 1
-        print(f"Agent {agent.unique_id} became Infected (belief={agent.belief})")
+    # 确保agent.beliefs不为空
+    if not agent.beliefs:
+        logger.warning(f"Agent {agent.unique_id} has no beliefs!")
+        return
+        
+    original_state = agent.health_condition
+    original_belief = agent.beliefs[-1]
     
-    elif agent.health_condition == "to_be_recover":
-        agent.health_condition = "Susceptible"  # 改为Susceptible而不是Recovered
-        agent.model.daily_new_susceptible_cases += 1
+    # 根据当前状态和信念更新健康状态
+    if original_state == "Infected" and original_belief == 0:
+        agent.health_condition = "Recovered"
         agent.model.infected -= 1
-        agent.model.susceptible += 1
-        print(f"Agent {agent.unique_id} became Susceptible (belief={agent.belief})")
+        agent.model.recovered += 1
+        agent.model.daily_new_recovered_cases += 1
+    elif original_state == "Susceptible" and original_belief == 1:
+        agent.health_condition = "Infected"
+        agent.model.susceptible -= 1
+        agent.model.infected += 1
+        agent.model.daily_new_infected_cases += 1
+    elif original_state == "Recovered" and original_belief == 1:
+        # 修正不一致状态：Recovered应该对应belief=0
+        logger.warning(f"Fixing inconsistent state for Agent {agent.unique_id}")
+        agent.beliefs[-1] = 0  # 修改最后一个belief值
+    
+    # 记录状态变化
+    if agent.health_condition != original_state:
+        print(f"STATE CHANGE: Agent {agent.unique_id}: {original_state}(belief={original_belief}) -> {agent.health_condition}(belief={agent.beliefs[-1]})")
+        print(f"MODEL COUNTS: Susceptible={agent.model.susceptible}, Infected={agent.model.infected}, Recovered={agent.model.recovered}")
+        print(f"NEW CASES: Infections={agent.model.daily_new_infected_cases}, Recoveries={agent.model.daily_new_recovered_cases}")
 
 
 def factorize(n):
@@ -167,7 +172,7 @@ def factorize(n):
             return (i, n // i)
     return (n, 1)
 
-def get_completion_from_messages(messages, model="glm-4", temperature=0):
+def get_completion_from_messages(messages, model="glm-3-turbo", temperature=0):
     """使用智谱AI替代OpenAI API"""
     success = False
     retry = 0
@@ -199,7 +204,7 @@ def get_completion_from_messages(messages, model="glm-4", temperature=0):
     else:
         return "无法获取响应，请检查API密钥或网络连接。"
 
-def get_completion_from_messages_json(messages, model="glm-4", temperature=0):
+def get_completion_from_messages_json(messages, model="glm-3-turbo", temperature=0):
     """使用智谱AI替代OpenAI API，并返回JSON格式的响应"""
     success = False
     retry = 0

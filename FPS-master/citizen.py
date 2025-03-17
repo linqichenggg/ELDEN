@@ -1,8 +1,6 @@
 # -- coding: utf-8 --**
-import pdb
-import time
 import mesa
-from utils import get_completion_from_messages, get_completion_from_messages_json, probability_threshold
+from utils import get_completion_from_messages, get_completion_from_messages_json
 import logging
 logger = logging.getLogger()
 logger.setLevel(logging.WARNING)
@@ -12,24 +10,14 @@ import random
 
 def get_summary_long(long_memory, short_memory):
     user_msg = long_memory_prompt.format(long_memory=long_memory, short_memory=short_memory)
-
     msg = [{"role": "user", "content": user_msg}]
+    return get_completion_from_messages(msg, temperature=1)
 
-    get_summary = get_completion_from_messages(msg, temperature=1)
-
-    return get_summary
-
-def get_summary_short(opinions,topic):
+def get_summary_short(opinions, topic):
     opinions_text = "\n".join(f"One people think: {opinion}" for opinion in opinions)
-
-    user_msg = reflecting_prompt.format(opinions=opinions_text,topic=topic)
-
+    user_msg = reflecting_prompt.format(opinions=opinions_text, topic=topic)
     msg = [{"role": "user", "content": user_msg}]
-
-    get_summary = get_completion_from_messages(msg, temperature=0.5)
-
-    return get_summary
-
+    return get_completion_from_messages(msg, temperature=0.5)
 
 class Citizen(mesa.Agent):
     '''
@@ -69,7 +57,8 @@ class Citizen(mesa.Agent):
         #Reasoning tracking
         self.persona = {"name":name, "age":age, "traits":traits}
 
-        self.initial_belief, self.initial_reasoning = self.initial_opinion_belief()
+        self.initial_belief = 1 if health_condition == 'Infected' else 0
+        self.initial_reasoning = 'initial_reasoning'
         self.opinions.append(self.opinion)
         self.beliefs.append(self.initial_belief)
         self.reasonings.append(self.initial_reasoning)
@@ -86,7 +75,7 @@ class Citizen(mesa.Agent):
     def initial_opinion_belief(self):
         if self.health_condition == 'Infected':
             belief = 1
-        else:
+        else:  # Susceptible
             belief = 0
 
         reasoning = 'initial_reasoning'
@@ -99,25 +88,16 @@ class Citizen(mesa.Agent):
     ################################################################################ 
 
     def interact(self):
-        ''' 
-        Step 1. Run infection for each agent_interaction
-        Step 2. Reset agent_interaction for next day
-        Used in self.step()
-        '''
+        '''与其他代理人互动并更新观点'''
+        # 收集其他人的观点
+        others_opinions = [agent.opinions[-1] for agent in self.agent_interaction]
         
-        others_opinions = []
-        contact_id = []
-        for agent in self.agent_interaction:
-            contact_id.append(agent.unique_id)
-            agent_latest_opinion = agent.opinions[-1]
-            others_opinions.append(agent_latest_opinion)
-        self.short_opinion_memory.append(others_opinions)
-        self.contact_ids.append(contact_id)
+        # 生成观点摘要
+        opinion_short_summary = get_summary_short(others_opinions, topic=self.topic)
         
-        opinion_short_summary = get_summary_short(others_opinions,topic=self.topic)
-
+        # 更新长期记忆
         long_mem = get_summary_long(self.long_opinion_memory, opinion_short_summary)
-
+        
         # 构建提示信息
         user_msg = update_opinion_prompt.format(
             agent_name=self.name,
@@ -130,35 +110,42 @@ class Citizen(mesa.Agent):
             long_mem=long_mem
         )
         
+        # 获取新观点和信念
         self.opinion, self.belief, self.reasoning = self.response_and_belief(user_msg)
         self.opinions.append(self.opinion)
         self.beliefs.append(self.belief)
         self.reasonings.append(self.reasoning)
+        
+        # 打印结果
         print(f"ID: {self.unique_id}")
         print(f"Tweet: {self.opinion}")
         print(f"Belief: {self.belief}")
         print(f"Reasoning: {self.reasoning}")
         print("-" * 50)
-
+        
+        # 更新记忆
         self.long_opinion_memory = long_mem
-        self.long_memory_full.append(self.long_opinion_memory)
-        #Reset Agent Interaction list
-        self.agent_interaction=[]
+        
+        # 重置互动列表
+        self.agent_interaction = []
 
     ########################################
     #               Infect                 #
     ########################################
         
     def response_and_belief(self, user_msg):
-
+        '''获取LLM响应并提取信念'''
         msg = [{"role": "user", "content": user_msg}]
         response_json = get_completion_from_messages_json(msg, temperature=1)
-        output = json.loads(response_json)
-        tweet = output['tweet']
-        belief = output['belief']
-        reasoning = output['reasoning']
-        belief = int(belief)
-        return tweet, belief, reasoning
+        try:
+            output = json.loads(response_json)
+            tweet = output['tweet']
+            belief = int(output['belief'])
+            reasoning = output['reasoning']
+            return tweet, belief, reasoning
+        except:
+            # 默认返回
+            return "无法解析响应", 0, "处理错误"
 
 
     ################################################################################
@@ -167,7 +154,5 @@ class Citizen(mesa.Agent):
   
 
     def step(self):
-        '''
-        Step function for agent
-        '''
+        '''代理人步进函数'''
         self.interact()
