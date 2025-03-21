@@ -8,9 +8,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", default = "GABM", help = "Name of the run to save outputs.")
     parser.add_argument("--contact_rate", default=3, type=int, help="Contact Rate")
-    parser.add_argument("--no_init_healthy", default=5, type=int,  #28 -> 5
+    parser.add_argument("--no_init_healthy", default=28, type=int,  #28 -> 5
                         help="Number of initial healthy people in the world.")    
-    parser.add_argument("--no_init_infect", default=5, type=int, #2 -> 5
+    parser.add_argument("--no_init_infect", default=2, type=int, #2 -> 5
                         help="Number of initial infected people in the world.")   
     parser.add_argument("--no_days", default=2, type=int,  #15 -> 3
                         help="Total number of days the world should run.")     
