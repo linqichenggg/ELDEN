@@ -1,0 +1,10 @@
+# 模拟参数配置
+name: "GABM"
+initial_healthy: 5
+initial_infected: 5
+days: 3
+runs: 1
+offset: 0
+contact_rate: 3
+population_age_range: [60, 90]
+start_date: "2025-06-01"

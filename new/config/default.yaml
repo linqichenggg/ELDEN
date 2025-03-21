@@ -1,0 +1,17 @@
+# 全局默认配置
+api:
+  key: "2fbfc2acf9e54a09886d422966fa3448.lss3vj7BdP327Wdh"
+  model: "glm-3-turbo"
+  temperature: 0.7
+  max_retries: 5
+  retry_delay: 0.5
+
+# 模拟的初始主题
+topic: "每天喝一杯白酒可以预防糖尿病和高血压，对老年人的心脑血管健康有益"
+
+# 默认路径
+paths:
+  output_dir: "output"
+  checkpoint_dir: "checkpoint"
+  data_dir: "data"
+  user_data_file: "data/weibo_users.xlsx"

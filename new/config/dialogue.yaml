@@ -1,0 +1,4 @@
+# 对话系统配置
+max_dialogue_turns: 3
+dialogue_convergence_threshold: 0.1
+save_dialogues: false

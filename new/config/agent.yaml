@@ -1,0 +1,6 @@
+# 代理人配置
+behavior_logging: true
+memory_system:
+  enable_long_term_memory: true
+  enable_short_term_memory: true
+  enable_dialogue_memory: true

@@ -1,0 +1,42 @@
+new/
+├── main.py                   # 主程序入口
+├── config_loader.py          # 配置加载模块
+│
+├── config/                   # 配置文件目录
+│   ├── default.yaml          # 默认配置
+│   ├── simulation.yaml       # 模拟相关参数
+│   ├── agent.yaml            # 代理人相关配置 
+│   ├── dialogue.yaml         # 对话系统配置
+│   └── topics/               # 主题配置
+│       └── health_rumors.yaml # 健康谣言配置
+│
+├── modules/                  # 模块化组件
+│   ├── __init__.py           # 使modules成为包
+│   ├── agent.py              # 代理人模块
+│   ├── dialogue_system.py    # 对话系统模块
+│   ├── belief_system.py      # 信念更新模块
+│   ├── memory_system.py      # 记忆管理模块
+│   ├── social_network.py     # 社交网络模块
+│   ├── data_collection.py    # 数据收集模块
+│   └── world.py              # 世界模型模块
+│
+├── utils/                    # 工具函数
+│   ├── __init__.py           # 使utils成为包
+│   ├── api_client.py         # API客户端（含缓存和批处理）
+│   ├── prompt_templates.py   # 提示模板
+│   ├── file_io.py            # 文件输入输出
+│   └── visualization.py      # 可视化工具
+│
+├── cache/                    # 缓存目录
+│   └── api_responses/        # API响应缓存
+│
+├── data/                     # 数据目录
+│   └── weibo_users.xlsx      # 示例用户数据
+│
+├── output/                   # 输出结果目录
+│   └── .gitkeep              # 保持目录存在的空文件
+│
+├── checkpoint/               # 检查点目录
+│   └── .gitkeep              # 保持目录存在的空文件
+│
+└── requirements.txt          # 依赖库清单
