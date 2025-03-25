@@ -242,8 +242,22 @@ class World(mesa.Model):
         # 初始化对话历史
         conversation_history = []
         
-        # Agent1开始对话
-        response1_data = agent1.generate_dialogue_initiation(agent2)
+        # Agent1开始对话 - 添加错误处理
+        try:
+            response1_data = agent1.generate_dialogue_initiation(agent2)
+            # 确保response1_data包含response键
+            if "response" not in response1_data:
+                print(f"警告：代理人{agent1.name}(ID:{agent1.unique_id})的初始响应缺少'response'键")
+                response1_data["response"] = f"我是{agent1.name}，我想讨论一下关于{self.topic}的看法。"
+        except Exception as e:
+            print(f"错误：代理人{agent1.name}生成对话初始化失败: {e}")
+            response1_data = {
+                "response": f"我是{agent1.name}，我想讨论一下关于{self.topic}的看法。",
+                "internal_thoughts": "生成初始响应时出错",
+                "belief_shift": 0,
+                "reasoning": "处理错误"
+            }
+        
         conversation_history.append({
             "speaker": agent1.name,
             "content": response1_data["response"],
@@ -255,12 +269,24 @@ class World(mesa.Model):
         
         # 执行多轮对话
         for turn in range(1, self.max_dialogue_turns + 1):
-            # Agent2回应
-            response2_data = agent2.generate_dialogue_response(
-                conversation_history=conversation_history,
-                dialogue_state=dialogue_state,
-                other_agent=agent1
-            )
+            # Agent2回应 - 添加错误处理
+            try:
+                response2_data = agent2.generate_dialogue_response(
+                    conversation_history=conversation_history,
+                    dialogue_state=dialogue_state,
+                    other_agent=agent1
+                )
+                if "response" not in response2_data:
+                    print(f"警告：代理人{agent2.name}(ID:{agent2.unique_id})的回应缺少'response'键")
+                    response2_data["response"] = f"我是{agent2.name}，谢谢分享您的观点。我正在思考这个话题。"
+            except Exception as e:
+                print(f"错误：代理人{agent2.name}生成对话回应失败: {e}")
+                response2_data = {
+                    "response": f"我是{agent2.name}，谢谢分享您的观点。我正在思考这个话题。",
+                    "internal_thoughts": "生成回应时出错",
+                    "belief_shift": 0,
+                    "reasoning": "处理错误"
+                }
             
             conversation_history.append({
                 "speaker": agent2.name,
@@ -271,12 +297,24 @@ class World(mesa.Model):
             # 更新对话状态
             dialogue_state.update_after_turn(agent2.unique_id, response2_data)
             
-            # Agent1回应
-            response1_data = agent1.generate_dialogue_response(
-                conversation_history=conversation_history,
-                dialogue_state=dialogue_state,
-                other_agent=agent2
-            )
+            # Agent1回应 - 添加错误处理
+            try:
+                response1_data = agent1.generate_dialogue_response(
+                    conversation_history=conversation_history,
+                    dialogue_state=dialogue_state,
+                    other_agent=agent2
+                )
+                if "response" not in response1_data:
+                    print(f"警告：代理人{agent1.name}(ID:{agent1.unique_id})的回应缺少'response'键")
+                    response1_data["response"] = f"我是{agent1.name}，感谢您的回复。让我再思考一下这个问题。"
+            except Exception as e:
+                print(f"错误：代理人{agent1.name}生成对话回应失败: {e}")
+                response1_data = {
+                    "response": f"我是{agent1.name}，感谢您的回复。让我再思考一下这个问题。",
+                    "internal_thoughts": "生成回应时出错",
+                    "belief_shift": 0,
+                    "reasoning": "处理错误"
+                }
             
             conversation_history.append({
                 "speaker": agent1.name,
@@ -288,23 +326,46 @@ class World(mesa.Model):
             dialogue_state.update_after_turn(agent1.unique_id, response1_data)
             
             # 检查停止条件
-            if should_stop_dialogue(
-                dialogue_state, 
-                response1_data, 
-                response2_data,
-                max_turns=self.max_dialogue_turns,
-                convergence_threshold=self.dialogue_convergence_threshold
-            ):
-                print(f"对话在第{turn}轮结束，原因: {dialogue_state.stop_reason}")
+            try:
+                should_stop = should_stop_dialogue(
+                    dialogue_state, 
+                    response1_data, 
+                    response2_data,
+                    max_turns=self.max_dialogue_turns,
+                    convergence_threshold=self.dialogue_convergence_threshold
+                )
+                if should_stop:
+                    print(f"对话在第{turn}轮结束，原因: {dialogue_state.stop_reason}")
+                    break
+            except Exception as e:
+                print(f"错误：检查对话停止条件时失败: {e}")
+                print(f"强制在第{turn}轮结束对话")
+                dialogue_state.stop_reason = "错误处理导致对话结束"
                 break
         
-        # 计算最终信念变化
-        belief_change1 = calculate_final_belief_change(agent1, dialogue_state, conversation_history)
-        belief_change2 = calculate_final_belief_change(agent2, dialogue_state, conversation_history)
+        # 计算最终信念变化 - 添加错误处理
+        try:
+            belief_change1 = calculate_final_belief_change(agent1, dialogue_state, conversation_history)
+        except Exception as e:
+            print(f"错误：计算代理人{agent1.name}的信念变化失败: {e}")
+            belief_change1 = 0
         
-        # 更新代理人信念
-        agent1.update_belief_after_dialogue(belief_change1, conversation_history)
-        agent2.update_belief_after_dialogue(belief_change2, conversation_history)
+        try:
+            belief_change2 = calculate_final_belief_change(agent2, dialogue_state, conversation_history)
+        except Exception as e:
+            print(f"错误：计算代理人{agent2.name}的信念变化失败: {e}")
+            belief_change2 = 0
+        
+        # 更新代理人信念 - 添加错误处理
+        try:
+            agent1.update_belief_after_dialogue(belief_change1, conversation_history)
+        except Exception as e:
+            print(f"错误：更新代理人{agent1.name}的信念失败: {e}")
+        
+        try:
+            agent2.update_belief_after_dialogue(belief_change2, conversation_history)
+        except Exception as e:
+            print(f"错误：更新代理人{agent2.name}的信念失败: {e}")
         
         # 记录对话结果
         dialogue_result = {

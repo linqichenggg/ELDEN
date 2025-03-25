@@ -7,13 +7,13 @@ import json
 
 if __name__ == "__main__":
     parser = argparse.ArgumentParser()
-    parser.add_argument("--name", default="GABM", help="Name of the run to save outputs.")
+    parser.add_argument("--name", default="lqc-3.24", help="Name of the run to save outputs.")
     parser.add_argument("--contact_rate", default=3, type=int, help="Contact Rate")
-    parser.add_argument("--no_init_healthy", default=5, type=int, 
+    parser.add_argument("--no_init_healthy", default=25, type=int, 
                         help="Number of initial healthy people in the world.")    
     parser.add_argument("--no_init_infect", default=5, type=int,
                         help="Number of initial infected people in the world.")   
-    parser.add_argument("--no_days", default=3, type=int,
+    parser.add_argument("--no_days", default=10, type=int,
                         help="Total number of days the world should run.")
     parser.add_argument("--no_of_runs", default=1, type=int, 
                         help="Total number of times you want to run this code.")

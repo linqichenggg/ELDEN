@@ -56,10 +56,22 @@ def get_completion_from_messages_json(messages, model="glm-3-turbo", temperature
                     "content": msg["content"]
                 })
             
-            # 添加JSON格式要求到消息中
+            # 更明确的JSON格式要求，包含所有可能需要的字段
             formatted_messages.append({
                 "role": "system",
-                "content": "请以JSON格式返回响应，包含tweet、belief和reasoning字段。"
+                "content": """请以JSON格式返回响应，格式必须包含以下字段之一或多个：
+                1. 对于观点更新：
+                   - "tweet": 更新后的观点
+                   - "belief": 信任程度 (0或1)
+                   - "reasoning": 解释原因
+                
+                2. 对于对话响应：
+                   - "response": 对话内容（必须字段）
+                   - "internal_thoughts": 内心想法
+                   - "belief_shift": 信念变化
+                   - "reasoning": 响应原因
+                
+                确保返回的是有效的JSON格式。"""
             })
             
             # 调用智谱AI API
@@ -78,36 +90,82 @@ def get_completion_from_messages_json(messages, model="glm-3-turbo", temperature
         content = response.choices[0].message.content
         # 尝试解析JSON，如果失败则格式化为JSON
         try:
-            json.loads(content)
-            return content
+            response_data = json.loads(content)
+            
+            # 验证包含必要字段
+            is_dialogue = "response" in messages[0]["content"].lower()
+            if is_dialogue and "response" not in response_data:
+                print("警告：响应缺少'response'字段，添加默认值")
+                response_data["response"] = "我需要进一步思考这个问题。"
+            elif not is_dialogue and "tweet" not in response_data:
+                print("警告：响应缺少'tweet'字段，添加默认值")
+                response_data["tweet"] = "无法形成明确观点。"
+                response_data["belief"] = 0
+                response_data["reasoning"] = "无法解析响应"
+                
+            return json.dumps(response_data)
         except:
             # 如果返回的不是有效JSON，尝试提取并格式化
             try:
                 # 查找可能的JSON部分
                 if "{" in content and "}" in content:
                     json_part = content[content.find("{"):content.rfind("}")+1]
-                    # 验证是否为有效JSON
-                    json.loads(json_part)
-                    return json_part
+                    # 尝试解析提取的JSON
+                    response_data = json.loads(json_part)
+                    
+                    # 验证所需字段
+                    is_dialogue = "response" in messages[0]["content"].lower()
+                    if is_dialogue:
+                        if "response" not in response_data:
+                            response_data["response"] = "我在思考这个问题。"
+                    else:
+                        if "tweet" not in response_data:
+                            response_data["tweet"] = "无法形成明确观点。"
+                            response_data["belief"] = 0
+                            response_data["reasoning"] = "解析响应时出现问题"
+                            
+                    return json.dumps(response_data)
                 else:
-                    # 创建一个基本的JSON响应
+                    # 创建一个适合上下文的默认响应
+                    is_dialogue = "dialogue" in messages[0]["content"].lower()
+                    if is_dialogue:
+                        return json.dumps({
+                            "response": "我需要更多时间思考这个问题。",
+                            "internal_thoughts": "无法形成清晰想法",
+                            "belief_shift": 0,
+                            "reasoning": "无法从模型获取有效的JSON响应"
+                        })
+                    else:
+                        return json.dumps({
+                            "tweet": "无法解析响应，这是一个模拟的观点。",
+                            "belief": 0,
+                            "reasoning": "无法从模型获取有效的JSON响应"
+                        })
+            except:
+                # 创建一个适合上下文的默认响应
+                is_dialogue = "dialogue" in messages[0]["content"].lower()
+                if is_dialogue:
+                    return json.dumps({
+                        "response": "无法形成有效回应。",
+                        "internal_thoughts": "处理错误",
+                        "belief_shift": 0,
+                        "reasoning": "JSON解析失败"
+                    })
+                else:
                     return json.dumps({
                         "tweet": "无法解析响应，这是一个模拟的推文。",
                         "belief": 0,
                         "reasoning": "无法从模型获取有效的JSON响应。"
                     })
-            except:
-                # 创建一个基本的JSON响应
-                return json.dumps({
-                    "tweet": "无法解析响应，这是一个模拟的推文。",
-                    "belief": 0,
-                    "reasoning": "无法从模型获取有效的JSON响应。"
-                })
     else:
+        # API调用失败的默认响应
         return json.dumps({
+            "response": "无法获取响应，请检查API密钥或网络连接。",
             "tweet": "无法获取响应，请检查API密钥或网络连接。",
             "belief": 0,
-            "reasoning": "API调用失败。"
+            "reasoning": "API调用失败。",
+            "internal_thoughts": "连接问题",
+            "belief_shift": 0
         })
 
 # 获取短期记忆摘要
@@ -273,20 +331,15 @@ dialogue_initiation_prompt = """你是一位老年人，名叫{agent_name}。
 
 你当前的观点是：{current_opinion}
 
-请生成一个自然的对话开场白，表达你对这个话题的看法，并尝试引导对方分享他们的观点。
-请以JSON格式回答，包含以下字段：
-1. "response": 你的对话开场白
-2. "internal_thoughts": 你内心的真实想法
-3. "belief_shift": 这次对话对你信念的初始影响（-1到1之间的数值，0表示没有变化）
-4. "reasoning": 你为什么这样开始对话的简短解释
-
-回答格式示例：
+【重要】你必须以以下JSON格式回答，确保包含所有必需字段：
 {{
-  "response": "您好，{other_name}，我是{agent_name}。我听说...",
-  "internal_thoughts": "我想了解对方的看法...",
-  "belief_shift": 0,
-  "reasoning": "我想以友好的方式开始对话"
+  "response": "你的对话内容放在这里",
+  "internal_thoughts": "你的内心想法",
+  "belief_shift": 0.0,
+  "reasoning": "你的推理过程"
 }}
+
+请生成一个自然的对话开场白，表达你对这个话题的看法，并尝试引导对方分享他们的观点。
 """
 
 # 修改后的多轮对话提示
