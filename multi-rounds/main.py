@@ -9,9 +9,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", default="lqc-3.24", help="Name of the run to save outputs.")
     parser.add_argument("--contact_rate", default=3, type=int, help="Contact Rate")
-    parser.add_argument("--no_init_healthy", default=80, type=int, 
+    parser.add_argument("--no_init_healthy", default=70, type=int, 
                         help="Number of initial healthy people in the world.")    
-    parser.add_argument("--no_init_infect", default=20, type=int,
+    parser.add_argument("--no_init_infect", default=30, type=int,
                         help="Number of initial infected people in the world.")   
     parser.add_argument("--no_days", default=10, type=int,
                         help="Total number of days the world should run.")
