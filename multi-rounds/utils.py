@@ -76,8 +76,7 @@ def clear_cache():
         print("缓存已清除")
 
 # 创建社交网络
-def create_social_network(agents, connection_probability=0.3):
-    '''创建代理人之间的社交网络'''
+def create_social_network(agents, connection_probability=0.2):  # 降低默认连接概率
     G = nx.Graph()
     
     # 添加节点
@@ -86,7 +85,15 @@ def create_social_network(agents, connection_probability=0.3):
     
     # 添加边
     for i, agent1 in enumerate(agents):
+        # 限制每个代理人的最大连接数
+        max_connections = min(20, len(agents)//5)  # 每个代理人最多20个连接
+        current_connections = 0
+        
         for j, agent2 in enumerate(agents[i+1:], i+1):
+            # 如果已达最大连接数，跳过
+            if current_connections >= max_connections:
+                break
+                
             # 基础连接概率
             p = connection_probability
             
@@ -102,6 +109,7 @@ def create_social_network(agents, connection_probability=0.3):
                 # 添加边，权重表示连接强度
                 weight = random.uniform(0.5, 1.0)
                 G.add_edge(agent1.unique_id, agent2.unique_id, weight=weight)
+                current_connections += 1
     
     return G
 

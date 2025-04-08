@@ -21,6 +21,8 @@ from utils import (
 )
 from prompt import *
 import json
+import psutil
+import os
 
 # 简化后的数据收集函数
 def compute_num_susceptible(model):
@@ -99,7 +101,7 @@ class World(mesa.Model):
                 health_condition = "Susceptible"
                 opinion = random.choice(topic_sentence_susceptible)
                 # 添加更明确的不信标记
-                opinion = "我不相信：" + opinion
+                opinion = "我相信：" + opinion
             else:
                 health_condition = "Infected"
                 opinion = random.choice(topic_sentence_infeted)
@@ -367,14 +369,16 @@ class World(mesa.Model):
         except Exception as e:
             print(f"错误：更新代理人{agent2.name}的信念失败: {e}")
         
-        # 记录对话结果
+        # 记录对话结果 - 确保包含详细对话内容
         dialogue_result = {
             "agents": (agent1.unique_id, agent2.unique_id),
-            "history": conversation_history,
+            "agent_names": (agent1.name, agent2.name),  # 添加代理人名称以便于阅读
+            "history": conversation_history,  # 确保这里包含完整对话历史
             "belief_changes": (belief_change1, belief_change2),
             "final_beliefs": (agent1.beliefs[-1], agent2.beliefs[-1]),
             "stop_reason": dialogue_state.stop_reason,
-            "turns": dialogue_state.turn_count
+            "turns": dialogue_state.turn_count,
+            "topic": self.topic  # 添加主题以便更好地理解对话内容
         }
         
         return conversation_history, belief_change1, belief_change2, dialogue_result
@@ -399,10 +403,19 @@ class World(mesa.Model):
         for agent1, agent2 in self.dialogue_pairs:
             # 执行多轮对话
             conversation_history, belief_change1, belief_change2, dialogue_result = self.conduct_dialogue(agent1, agent2)
+            
+            # 调试信息
+            print(f"对话结束: {agent1.name} 与 {agent2.name}, {len(conversation_history)} 轮对话")
+            if conversation_history:
+                print(f"第一轮: {conversation_history[0]['speaker']}: {conversation_history[0]['content'][:50]}...")
+                if len(conversation_history) > 1:
+                    print(f"最后一轮: {conversation_history[-1]['speaker']}: {conversation_history[-1]['content'][:50]}...")
+            
             dialogue_results.append(dialogue_result)
         
         # 记录对话结果
         self.dialogue_records.extend(dialogue_results)
+        print(f"当前步骤结束，累计 {len(self.dialogue_records)} 条对话记录")
         
         # 更新所有代理人状态
         print("Updating agent days...")
@@ -498,14 +511,34 @@ class World(mesa.Model):
 
     # 新增：保存对话数据
     def save_dialogue_data(self, file_path):
-        """保存对话数据到JSON文件"""
-        dialogue_data = {
-            "topic": self.topic,
-            "population": self.population,
-            "initial_healthy": self.initial_healthy,
-            "initial_infected": self.initial_infected,
-            "dialogues": self.dialogue_records
-        }
+        """保存对话数据到JSON文件，确保包含完整对话内容"""
+        # 检查对话记录是否为空
+        if not self.dialogue_records:
+            print("警告: 没有对话记录可保存!")
+            # 创建一个空的对话数据结构
+            dialogue_data = {
+                "topic": self.topic,
+                "population": self.population,
+                "initial_healthy": self.initial_healthy,
+                "initial_infected": self.initial_infected,
+                "dialogues": [],
+                "warning": "对话记录为空，请检查conduct_dialogue方法是否正确执行"
+            }
+        else:
+            # 正常保存对话数据
+            dialogue_data = {
+                "topic": self.topic,
+                "population": self.population,
+                "initial_healthy": self.initial_healthy,
+                "initial_infected": self.initial_infected,
+                "dialogues": self.dialogue_records
+            }
+        
+        # 调试输出
+        print(f"保存对话数据: {len(self.dialogue_records)} 条对话记录")
+        if self.dialogue_records:
+            sample = self.dialogue_records[0]
+            print(f"对话示例: 代理人 {sample.get('agents', '未知')} 的对话，{len(sample.get('history', []))} 轮")
         
         with open(file_path, "w", encoding="utf-8") as f:
             json.dump(dialogue_data, f, ensure_ascii=False, indent=2)
@@ -577,3 +610,11 @@ class World(mesa.Model):
                 "变化后": "Recovered",
                 "原因": "不再相信谣言"
             })
+
+    def monitor_memory_usage(self):
+        """监控内存使用情况"""
+        process = psutil.Process(os.getpid())
+        memory_info = process.memory_info()
+        memory_usage_mb = memory_info.rss / 1024 / 1024
+        print(f"当前内存使用: {memory_usage_mb:.2f} MB")
+        return memory_usage_mb

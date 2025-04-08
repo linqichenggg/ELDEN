@@ -9,9 +9,9 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser()
     parser.add_argument("--name", default="lqc-3.24", help="Name of the run to save outputs.")
     parser.add_argument("--contact_rate", default=3, type=int, help="Contact Rate")
-    parser.add_argument("--no_init_healthy", default=25, type=int, 
+    parser.add_argument("--no_init_healthy", default=80, type=int, 
                         help="Number of initial healthy people in the world.")    
-    parser.add_argument("--no_init_infect", default=5, type=int,
+    parser.add_argument("--no_init_infect", default=20, type=int,
                         help="Number of initial infected people in the world.")   
     parser.add_argument("--no_days", default=10, type=int,
                         help="Total number of days the world should run.")
@@ -29,6 +29,8 @@ if __name__ == "__main__":
                         help="Path to the Excel file with real user data")
     parser.add_argument("--save_behaviors", action="store_true",
                         help="Save detailed agent behavior logs")
+    parser.add_argument("--checkpoint_interval", default=5, type=int,
+                        help="每多少步保存一次检查点")
     args = parser.parse_args()
 
     # 创建输出目录
