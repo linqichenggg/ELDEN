@@ -21,7 +21,7 @@ if __name__ == "__main__":
                         help="offset is equal to number of days if you need to load a checkpoint")
     parser.add_argument("--max_dialogue_turns", default=3, type=int,
                         help="Maximum number of turns in a dialogue")
-    parser.add_argument("--dialogue_convergence", default=0.1, type=float,
+    parser.add_argument("--dialogue_convergence", default=0.2, type=float,
                         help="Threshold for dialogue convergence")
     parser.add_argument("--save_dialogues", action="store_true",
                         help="Save dialogue data to JSON file")
