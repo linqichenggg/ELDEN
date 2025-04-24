@@ -1,0 +1,29 @@
+                            OLS Regression Results                            
+==============================================================================
+Dep. Variable:         recovery_index   R-squared:                       0.109
+Model:                            OLS   Adj. R-squared:                  0.062
+Method:                 Least Squares   F-statistic:                     2.305
+Date:                Wed, 09 Apr 2025   Prob (F-statistic):             0.0505
+Time:                        10:13:03   Log-Likelihood:                 17.046
+No. Observations:                 100   AIC:                            -22.09
+Df Residuals:                      94   BIC:                            -6.460
+Df Model:                           5                                         
+Covariance Type:            nonrobust                                         
+=====================================================================================
+                        coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------
+const                -0.1552      0.150     -1.038      0.302      -0.452       0.142
+openness             -0.0291      0.017     -1.752      0.083      -0.062       0.004
+conscientiousness     0.0364      0.017      2.093      0.039       0.002       0.071
+extraversion         -0.0082      0.016     -0.514      0.609      -0.040       0.023
+agreeableness         0.0325      0.018      1.855      0.067      -0.002       0.067
+neuroticism           0.0164      0.018      0.896      0.373      -0.020       0.053
+==============================================================================
+Omnibus:                       83.623   Durbin-Watson:                   1.876
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):              496.581
+Skew:                           2.908   Prob(JB):                    1.48e-108
+Kurtosis:                      12.239   Cond. No.                         76.7
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.

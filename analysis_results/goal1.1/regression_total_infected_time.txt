@@ -1,0 +1,29 @@
+                             OLS Regression Results                            
+===============================================================================
+Dep. Variable:     total_infected_time   R-squared:                       0.104
+Model:                             OLS   Adj. R-squared:                  0.056
+Method:                  Least Squares   F-statistic:                     2.185
+Date:                 Wed, 09 Apr 2025   Prob (F-statistic):             0.0623
+Time:                         10:13:03   Log-Likelihood:                -244.98
+No. Observations:                  100   AIC:                             502.0
+Df Residuals:                       94   BIC:                             517.6
+Df Model:                            5                                         
+Covariance Type:             nonrobust                                         
+=====================================================================================
+                        coef    std err          t      P>|t|      [0.025      0.975]
+-------------------------------------------------------------------------------------
+const                 8.0855      2.055      3.934      0.000       4.004      12.167
+openness             -0.3186      0.228     -1.398      0.166      -0.771       0.134
+conscientiousness    -0.1593      0.239     -0.667      0.507      -0.634       0.315
+extraversion         -0.3785      0.219     -1.731      0.087      -0.813       0.056
+agreeableness        -0.1191      0.241     -0.495      0.622      -0.597       0.359
+neuroticism          -0.4198      0.252     -1.667      0.099      -0.920       0.080
+==============================================================================
+Omnibus:                       39.905   Durbin-Watson:                   1.300
+Prob(Omnibus):                  0.000   Jarque-Bera (JB):               76.150
+Skew:                           1.663   Prob(JB):                     2.91e-17
+Kurtosis:                       5.685   Cond. No.                         76.7
+==============================================================================
+
+Notes:
+[1] Standard Errors assume that the covariance matrix of the errors is correctly specified.
