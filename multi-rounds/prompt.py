@@ -5,7 +5,7 @@ import random
 from zhipuai import ZhipuAI  # 导入智谱AI客户端
 
 # 初始化智谱AI客户端
-zhipu_client = ZhipuAI(api_key="2fbfc2acf9e54a09886d422966fa3448.lss3vj7BdP327Wdh")
+zhipu_client = ZhipuAI(api_key="")
 
 # 使用智谱AI获取响应
 def get_completion_from_messages(messages, model="glm-3-turbo", temperature=0):
